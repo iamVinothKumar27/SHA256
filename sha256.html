@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>SHA-512 Hash Generator</title>
+ <style>
+ body {
+ font-family: Arial, sans-serif;
+ margin: 20px;
+ padding: 20px;
+ background-color: #f4f4f4;
+ }
+ h1 {
+ color: #333;
+ }
+ .container {
+ margin-bottom: 20px;
+ }
+ textarea {
+ width: 100%;
+ height: 100px;
+ }
+ button {
+ padding: 10px 15px;
+ margin-top: 10px;
+ cursor: pointer;
+ background-color: #5c67f2;
+ color: white;
+ border: none;
+ border-radius: 5px;
+ }
+ button:hover {
+ background-color: #4b54d4;
+ }
+ header {
+ position: fixed;
+ top: 0;
+ left: 0;
+ width: 100%;
+ z-index: 200;
+ background-color: #D2B48C;
+ box-shadow: 0 1px 4px hsl(0 4% 14% /10%);
+}
+.container1 {
+ max-width: 1068px;
+ margin: auto;
+ padding: 10px 20px;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+}
+.logo {
+ font-size: 1.5rem;
+ font-weight: 600;
+ color: #FFF;
+ text-decoration: none;
+ padding: 10px;
+ margin-left: -400px;
+ font-family: 'Poppins', sans-serif;
+}
+.logo span {
+ color: #555555; /* Color for Labs! */
+ }
+.headings {
+ font-size: 1.5rem;
+ font-weight: 600;
+ color: #1a1e21;
+ margin: 0;
+}
+ </style>
+</head>
+<body>
+ <header>
+ <div class="container1">
+ <a href="#" class="logo">Crypto<span>Labs!</span></a>
+ <h1 class="headings">SHA-512 Hash Generator</h1>
+ </div>
+ </header>
+ <div class="container">
+ <h2>Hash a Message</h2>
+ <textarea id="messageInput" placeholder="Enter your message here..."></textarea>
+ <button onclick="generateHash()">Generate Hash</button>
+ <h3>Hash:</h3>
+ <textarea id="hashOutput" readonly></textarea>
+ <button onclick="downloadHash()">Download Hashed Message</button>
+ <button onclick="shareHash()">Share Hash via WhatsApp</button>
+ </div>
+ <div class="container">
+ <h2>Hash a File</h2>
+ <input type="file" id="fileInput">
+ <button onclick="hashFile()">Hash File</button>
+ <h3>File Hash:</h3>
+ <textarea id="fileHashOutput" readonly></textarea>
+ <button onclick="downloadFileHash()">Download Hashed File</button>
+ <button onclick="shareFileHash()">Share File Hash via WhatsApp</button>
+ </div>
+ <script>
+ const Constants = [
+ 0x428a2f98d728ae22n, 0x7137449123ef65cdn, 0xb5c0fbcfec4d3b2fn,
+ 0xe9b5dba58189dbbcn, 0x3956c25bf348b538n, 0x59f111f1b605d019n,
+ 0x923f82a4af194f9bn, 0xab1c5ed5da6d8118n, 0xd807aa98a3030242n,
+ 0x12835b0145706fben, 0x243185be4ee4b28cn, 0x550c7dc3d5ffb4e2n,
+ 0x72be5d74f27b896fn, 0x80deb1fe3b1696b1n, 0x9bdc06a725c71235n,
+ 0xc19bf174cf692694n, 0xe49b69c19ef14ad2n, 0xefbe4786384f25e3n,
+ 0x0fc19dc68b8cd5b5n, 0x240ca1cc77ac9c65n, 0x2de92c6f592b0275n,
+ 0x4a7484aa6ea6e483n, 0x5cb0a9dcbd41fb44n, 0x76f988da831153b5n,
+ 0x983e5152ee66dfabn, 0xa831c66d2db43210n, 0xb00327c898fb213fn,
+ 0xbf597fc7beef0ee4n, 0xc6e00bf33da88fc2n, 0xd5a79147930aa725n,
+ 0x06ca6351e003826fn, 0x142929670a0e6e70n, 0x27b70a8546d22ffcn,
+ 0x2e1b21385c26c926n, 0x4d2c6dfc5ac42aedn, 0x53380d139d95b3dfn,
+ 0x650a73548baf63den, 0x766a0abb3c77b2a8n, 0x81c2c92e47edaee6n,
+ 0x92722c851482353bn, 0xa2bfe8a14cf10364n, 0xa81a664bbc423001n,
+ 0xc24b8b70d0f89791n, 0xc76c51a30654be30n, 0xd192e819d6ef5218n,
+ 0xd69906245565a910n, 0xf40e35855771202an, 0x106aa07032bbd1b8n,
+ 0x19a4c116b8d2d0c8n, 0x1e376c085141ab53n, 0x2748774cdf8eeb99n,
+ 0x34b0bcb5e19b48a8n, 0x391c0cb3c5c95a63n, 0x4ed8aa4ae3418acbn,
+ 0x5b9cca4f7763e373n, 0x682e6ff3d6b2b8a3n, 0x748f82ee5defb2fcn,
+ 0x78a5636f43172f60n, 0x84c87814a1f0ab72n, 0x8cc702081a6439ecn,
+ 0x90befffa23631e28n, 0xa4506cebde82bde9n, 0xbef9a3f7b2c67915n,
+ 0xc67178f2e372532bn, 0xca273eceea26619cn, 0xd186b8c721c0c207n,
+ 0xeada7dd6cde0eb1en, 0xf57d4f7fee6ed178n, 0x06f067aa72176fban,
+ 0x0a637dc5a2c898a6n, 0x113f9804bef90daen, 0x1b710b35131c471bn,
+ 0x28db77f523047d84n, 0x32caab7b40c72493n, 0x3c9ebe0a15c9bebcn,
+ 0x431d67c49c100d4cn, 0x4cc5d4becb3e42b6n, 0x597f299cfc657e2an,
+ 0x5fcb6fab3ad6faecn, 0x6c44198c4a475817n
+ ];
+ let Message = new Array(80).fill(BigInt(0));
+ function getHex(bin) {
+ const hexValues = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
+ const index = parseInt(bin, 2);
+ return hexValues[index];
+ }
+ function decimalToHex(deci) {
+ let hexstring = '';
+ let EQBIN = deci.toString(2).padStart(64, '0');
+ for (let i = 0; i < EQBIN.length; i += 4) {
+ hexstring += getHex(EQBIN.substr(i, 4));
+ }
+ return hexstring;
+ }
+ function binaryToDecimal(bin) {
+ return BigInt('0b' + bin);
+ }
+ function rotateRight(x, n) {
+ return (x >> n) | (x << (BigInt(64) - n));
+ }
+ function shiftRight(x, n) {
+ return x >> n;
+ }
+ function separator() {
+ for (let g = 16; g < 80; ++g) {
+ const WordA = rotateRight(Message[g - 2], 19n) ^ rotateRight(Message[g - 2], 61n) ^
+shiftRight(Message[g - 2], 6n);
+ const WordB = Message[g - 7];
+ const WordC = rotateRight(Message[g - 15], 1n) ^ rotateRight(Message[g - 15], 8n) ^
+shiftRight(Message[g - 15], 7n);
+ const WordD = Message[g - 16];
+ const T = (WordA + WordB + WordC + WordD) % BigInt(2n ** 64n);
+ Message[g] = T;
+ }
+ }
+ function addHash(carry, sum) {
+ return (carry + sum) % BigInt(2n ** 64n);
+ }
+ function calculateHash(message) {
+ let hashValues = [
+ BigInt(0x6a09e667f3bcc908n),
+ BigInt(0xbb67ae8584caa73bn),
+ BigInt(0x3c6ef372fe94f82bn),
+ BigInt(0xa54ff53a5f1d36f1n),
+ BigInt(0x510e527fade682d1n),
+ BigInt(0x9b05688c2b3e6c1fn),
+ BigInt(0x1f83d9abfb41bd6bn),
+ BigInt(0x5be0cd19137e2179n)
+ ];
+ for (let i = 0; i < 80; i++) {
+ const temp1 = (hashValues[7] + (rotateRight(hashValues[4], 14n) ^
+rotateRight(hashValues[4], 18n) ^ rotateRight(hashValues[4], 41n)) + (hashValues[4] &
+hashValues[5]) ^ (~hashValues[4] & hashValues[6]) + Constants[i] + Message[i]) %
+BigInt(2n ** 64n);
+ const temp2 = (rotateRight(hashValues[0], 28n) ^ rotateRight(hashValues[0], 34n) ^
+rotateRight(hashValues[0], 39n) + (hashValues[0] & hashValues[1]) ^ (hashValues[0] &
+hashValues[2]) ^ (hashValues[1] & hashValues[2])) % BigInt(2n ** 64n);
+ hashValues[7] = hashValues[6];
+ hashValues[6] = hashValues[5];
+ hashValues[5] = hashValues[4];
+ hashValues[4] = (hashValues[3] + temp1) % BigInt(2n ** 64n);
+ hashValues[3] = hashValues[2];
+ hashValues[2] = hashValues[1];
+ hashValues[1] = hashValues[0];
+ hashValues[0] = (temp1 + temp2) % BigInt(2n ** 64n);
+ }
+ for (let i = 0; i < 8; i++) {
+ hashValues[i] = (hashValues[i] + hashValues[i]) % BigInt(2n ** 64n);
+ }
+ return hashValues.map(value => decimalToHex(value)).join('');
+ }
+ function generateHash() {
+ const message = document.getElementById('messageInput').value;
+ const utf8Bytes = new TextEncoder().encode(message);
+ const byteArray = Array.from(utf8Bytes);
+ const length = message.length * 8;
+ const blockCount = Math.ceil((length + 128) / 1024);
+ for (let i = 0; i < blockCount; i++) {
+ for (let j = 0; j < 128; j++) {
+ if (i * 128 + j < byteArray.length) {
+ Message[j] = BigInt(byteArray[i * 128 + j]);
+ } else if (j === 128) {
+ Message[j] = BigInt(0b10000000);
+ } else {
+ Message[j] = BigInt(0);
+ }
+ }
+ separator();
+ }
+ Message[79] = BigInt(length);
+ const hash = calculateHash(Message);
+ document.getElementById('hashOutput').value = hash;
+ }
+ async function hashFile() {
+ const fileInput = document.getElementById('fileInput');
+ const file = fileInput.files[0];
+ if (!file) {
+ alert('Please select a file to hash.');
+ return;
+ }
+ const fileBuffer = await file.arrayBuffer();
+ const byteArray = new Uint8Array(fileBuffer);
+ const length = byteArray.length * 8;
+ const blockCount = Math.ceil((length + 128) / 1024);
+ for (let i = 0; i < blockCount; i++) {
+ for (let j = 0; j < 128; j++) {
+ if (i * 128 + j < byteArray.length) {
+ Message[j] = BigInt(byteArray[i * 128 + j]);
+ } else if (j === 128) {
+ Message[j] = BigInt(0b10000000);
+ } else {
+ Message[j] = BigInt(0);
+ }
+ }
+ separator();
+ }
+ Message[79] = BigInt(length);
+ const hash = calculateHash(Message);
+ document.getElementById('fileHashOutput').value = hash;
+ }
+ function downloadHash() {
+ const hash = document.getElementById('hashOutput').value;
+ const blob = new Blob([hash], { type: 'text/plain' });
+ const url = URL.createObjectURL(blob);
+ const a = document.createElement('a');
+ a.href = url;
+ a.download = 'hashed_message.txt';
+ a.click();
+ URL.revokeObjectURL(url);
+ }
+ function shareHash() {
+ const hash = document.getElementById('hashOutput').value;
+ const message = encodeURIComponent(`SHA-512 Hash: ${hash}`);
+ const url = `https://wa.me/?text=${message}`;
+ window.open(url, '_blank');
+ }
+ function downloadFileHash() {
+ const hash = document.getElementById('fileHashOutput').value;
+ const blob = new Blob([hash], { type: 'text/plain' });
+ const url = URL.createObjectURL(blob);
+ const a = document.createElement('a');
+ a.href = url;
+ a.download = 'hashed_file.txt';
+ a.click();
+ URL.revokeObjectURL(url);
+ }
+ function shareFileHash() {
+ const fileHash = document.getElementById('fileHashOutput').value;
+ const message = encodeURIComponent(`SHA-512 Hash of File: ${fileHash}`);
+ const url = `https://wa.me/?text=${message}`;
+ window.open(url, '_blank');
+ }
+ </script>
+</body>
+</html>
